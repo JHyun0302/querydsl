@@ -19,7 +19,6 @@ public class MemberController {
     private final MemberRepository memberRepository;
 
     @GetMapping("/v1/members")
-
     public List<MemberTeamDto> searchMemberV1(MemberSearchCondition condition) {
         return memberJpaRepository.search(condition);
         //http://localhost:8080/v1/members?teamName=teamB&ageGoe=31&ageLoe=35&username=member31
