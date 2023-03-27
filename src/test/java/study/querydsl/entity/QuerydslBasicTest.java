@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
 import study.querydsl.dto.QMemberDto;
@@ -36,11 +37,11 @@ public class QuerydslBasicTest {
     @Autowired
     EntityManager em;
 
-    JPAQueryFactory queryFactory;
+    JPAQueryFactory queryFactory; //QueryDsl
 
     @BeforeEach
     public void before() {
-        queryFactory = new JPAQueryFactory(em);
+        queryFactory = new JPAQueryFactory(em); //QueryDsl
         Team teamA = new Team("teamA");
         Team teamB = new Team("teamB");
         em.persist(teamA);
@@ -99,13 +100,18 @@ public class QuerydslBasicTest {
     public void search() {
         Member findMember = queryFactory
                 .selectFrom(member)
+//                .where(member.username.eq("member1")
+//                        .and(member.age.between(10, 30)))
                 .where(member.username.eq("member1")
-                        .and(member.age.between(10, 30)))
+                        .and(member.age.goe(10)))
                 .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
     }
 
+    /**
+     * 위와 동일: And 조건은 (,)로 묶어서 표현 가능
+     */
     @Test
     public void searchAndParam() {
         Member findMember = queryFactory
@@ -117,7 +123,9 @@ public class QuerydslBasicTest {
         assertThat(findMember.getUsername()).isEqualTo("member1");
     }
 
-
+    /**
+     * .fetch~()에 따라 반환값 바뀜!
+     */
     @Test
     public void resultFetch() {
 //        //List
@@ -178,7 +186,7 @@ public class QuerydslBasicTest {
     public void paging1() {
         List<Member> result = queryFactory
                 .selectFrom(member)
-                .orderBy(member.username.desc())
+                .orderBy(member.username.desc()) //이름 내림차순
                 .offset(1) //0부터 시작(zero index)
                 .limit(2) //최대 2건 조회
                 .fetch();
@@ -186,7 +194,7 @@ public class QuerydslBasicTest {
         assertThat(result.size()).isEqualTo(2);
     }
 
-    //전체 조회 수
+    //전체 조회 수 + count 쿼리
     @Test
     public void paging2() {
         QueryResults<Member> queryResults = queryFactory
@@ -203,6 +211,7 @@ public class QuerydslBasicTest {
     }
 
     /**
+     * <집합 함수>
      * JPQL
      * select
      * COUNT(m), //회원수
@@ -234,6 +243,7 @@ public class QuerydslBasicTest {
     }
 
     /**
+     * <GroupBy>
      * 팀의 이름과 각 팀의 평균 연령을 구해라.
      */
     @Test
@@ -262,17 +272,18 @@ public class QuerydslBasicTest {
                 .from(member)
                 .join(member.team, team)
                 .groupBy(team.name)
-                .having(team.name.eq("teamA"))
+                .having(team.name.eq("teamB"))
                 .fetch();
 
-        Tuple teamA = result.get(0);
+        Tuple teamB = result.get(0);
 
-        assertThat(teamA.get(team.name)).isEqualTo("teamA");
-        assertThat(teamA.get(member.age.avg())).isEqualTo(15); //(10 + 20) / 2
+        assertThat(teamB.get(team.name)).isEqualTo("teamB");
+        assertThat(teamB.get(member.age.avg())).isEqualTo(35); //(30 + 40) / 2
 
     }
 
     /**
+     * <기본 조인>
      * 팀 A에 소속된 모든 회원
      * InnerJoin, Join
      * leftJoin, rightJoin
@@ -291,8 +302,8 @@ public class QuerydslBasicTest {
     }
 
     /**
-     * 세타 조인(연관관계가 없는 필드로 조인)
-     * 회원의 이름이 팀 이름과 같은 회원 조회
+     * 세타 조인(연관관계 없는 필드로 조인)
+     * "회원의 이름 = 팀 이름"  회원 조회
      * leftJoin, rightJoin(외부 조인) 불가능!
      * -> "조인 on" 사용하면 외부 조인 가능!
      */
@@ -316,15 +327,18 @@ public class QuerydslBasicTest {
     /**
      * 에) 회원과 팀을 조인하면서, 팀 이름이 teamA인 팀만 조인, 회원은 모두 조회
      * JPQL: select m, t from Member m left join m.team t on t.name = 'teamA'
+     * - select from join where fetch
+     * - select from leftJoin on fetch (결과 동일)
      */
     @Test
     public void join_on_filtering() {
         List<Tuple> result = queryFactory
                 .select(member, team)
                 .from(member)
-                .join(member.team, team) //.leftjoin(~) -> team.id 매칭
-//              .on(team.name.eq("teamA"))  //where 절과 결과 동일
-                .where(team.name.eq("teamA"))
+//                .join(member.team, team)
+                .leftJoin(member.team, team)
+                .on(team.name.eq("teamA"))  //where 절과 결과 동일
+//                .where(team.name.eq("teamA"))
                 .fetch();
 
         for (Tuple tuple : result) {
@@ -333,7 +347,7 @@ public class QuerydslBasicTest {
     }
 
     /**
-     * 연관관계가 없는 엔티티 외부 조인
+     * 연관관계가 없는 엔티티 외부 조인 -> 세타 조인!
      * 에) 회원의 이름과 팀의 이름이 같은 대상 외부 조인
      * JPQL: select m, t from Member m left join Team t on m.username = t.name
      */
@@ -346,9 +360,9 @@ public class QuerydslBasicTest {
         List<Tuple> result = queryFactory
                 .select(member, team)
                 .from(member)
-//                .leftJoin(member.team, team) //일반 조인과 세타 조인 차이점: id값 따로 없이 막 조인!
-                .leftJoin(team)
-                .on(member.username.eq(team.name))
+                .leftJoin(member.team, team)
+//                .join(team)
+                .on(member.username.eq(team.name)) // 세타(id값 따로 없이 막 조인!) 조인 조건: "userName == teamName"
                 .fetch();
 
         for (Tuple tuple : result) {
@@ -372,7 +386,7 @@ public class QuerydslBasicTest {
                 .where(member.username.eq("member1"))
                 .fetchOne();
 
-        //로딩이 된 엔티티인지 구분 (Lazy이므로 team은 로딩 안됐음)
+        //로딩이 된 엔티티인지 확인 (Lazy이므로 team은 로딩 안됐음)
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
         assertThat(loaded).as("페치 조인 미적용").isFalse();
     }
@@ -474,8 +488,13 @@ public class QuerydslBasicTest {
         }
     }
 
+//    한계: from 절의 서브쿼리 (인라인 뷰) 불가능
+//    sol: 1.서브쿼리를 join으로 변경, 2.쿼리를 2번 분리해서 실행, 3.nativeSQL 사용
+
     /**
      * Case 문
+     * - .then()
+     * - .otherwise()
      */
     @Test
     public void basicCase() {
@@ -535,6 +554,9 @@ public class QuerydslBasicTest {
 
     /**
      * 상수, 문자 더하기
+     * - Expressions.constant("X")
+     * - .concat("X")
+     * - string 타입이 아닌경우: .stringValue()
      */
     @Test
     public void constant() {
@@ -683,7 +705,8 @@ public class QuerydslBasicTest {
 
     /**
      * @QueryProjection - QMemberDto 생성
-     * - trade off: Dto가 querydsl에 의존하게 됨
+     * - 이점: 컴파일 에러 잡아줌
+     * - trade off: Dto가 querydsl에 의존하게 됨 (QMemberDto 생성)
      */
     @Test
     public void findDtoByQueryProjection() {
@@ -767,6 +790,7 @@ public class QuerydslBasicTest {
      * sol: em.flush, clear (영속성 컨택스트 초기화)
      */
     @Test
+    @Commit
     public void bulkUpdate() {
         //전
         //member1 = 10 -> DB member1
@@ -790,7 +814,7 @@ public class QuerydslBasicTest {
         List<Member> result = queryFactory
                 .selectFrom(member)
                 .fetch();
-        //영속성 컨택스트가 우선권을 가져서 DB와 결과가 다름! -> sol: flush, clear
+
         for (Member member1 : result) {
             System.out.println("member1 = " + member1);
         }
@@ -837,6 +861,7 @@ public class QuerydslBasicTest {
         }
     }
 
+    //  소문자 변경
     @Test
     public void sqlFunction2() {
         List<String> result = queryFactory
@@ -851,5 +876,4 @@ public class QuerydslBasicTest {
             System.out.println("s = " + s);
         }
     }
-
 }
