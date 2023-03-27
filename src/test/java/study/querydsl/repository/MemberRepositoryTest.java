@@ -101,7 +101,7 @@ class MemberRepositoryTest {
     }
 
     /**
-     * QuerydslPredicateExecutor 인터페이스
+     * QuerydslPredicateExecutor 인터페이스  - 실무 X
      * - 한계: left join 불가능, 서비스 클래스가 Querydsl 구현 기술에 의존
      */
     @Test
@@ -123,7 +123,7 @@ class MemberRepositoryTest {
 
         QMember member = QMember.member;
         Iterable<Member> result = memberRepository.findAll(
-                member.age.between(20, 40)
+                member.age.between(10, 40)
                         .and(member.username.eq("member1")));
 
         for (Member findMember : result) {
