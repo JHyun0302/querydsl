@@ -33,6 +33,8 @@ public class MemberController {
     public Page<MemberTeamDto> searchMemberV3(MemberSearchCondition condition, Pageable pageable) {
         return memberRepository.searchPageComplex(condition, pageable);
     }
+//    http://localhost:8080/v3/members?page=0&size=20    -> data: 100개 이므로 CountQuery O
+//    http://localhost:8080/v3/members?page=0&size=200    -> data: 100개 이므로 CountQuery X
 
 
 }
