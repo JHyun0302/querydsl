@@ -1,4 +1,4 @@
-package study.querydsl.repository;
+package study.querydsl.repository.custom;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -78,6 +78,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { //extends 
         return new PageImpl<>(content, pageable, total);
     }
 
+    //QuerydslRepositorySupport
  /*   @Override
     public Page<MemberTeamDto> searchPageSimple2(MemberSearchCondition condition, Pageable pageable) {
         JPQLQuery<MemberTeamDto> jpaQuery = from(member)
@@ -96,10 +97,9 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { //extends 
                         team.name.as("teamName")));
 
 //        페이징을 Querydsl로 편리하게 변환 가능(sort 안됨!)
-//        applyPagination = .offset(), .limite() 대신 해줌
+//        applyPagination = .offset(), .limit() 대신 해줌
         JPQLQuery<MemberTeamDto> query = getQuerydsl().applyPagination(pageable, jpaQuery);
-
-        List<MemberTeamDto> fetch = query.fetch();
+        List<MemberTeamDto> fetch = query.fetch(); //query.fetchResults();
 
         List<MemberTeamDto> content = results.getResults(); //실제 데이터
         long total = results.getTotal();
@@ -132,9 +132,9 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { //extends 
                         ageGoe(condition.getAgeGoe()),
                         ageLoe(condition.getAgeLoe())
                 )
-                .offset(pageable.getOffset()) //몇 번부터 시작할거야
-                .limit(pageable.getPageSize()) //1번 조회할 때 몇 개까지 가져올거야
-                .fetch();
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch(); //return: content
 
         JPAQuery<Member> countQuery = queryFactory
                 .select(member)
@@ -145,9 +145,9 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { //extends 
                         teamNameEq(condition.getTeamName()),
                         ageGoe(condition.getAgeGoe()),
                         ageLoe(condition.getAgeLoe())
-                );
+                ); //countQuery
 
-        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount);
+        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount); //CountQuery 최적화
     }
 
     private BooleanExpression usernameEq(String username) {

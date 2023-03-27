@@ -1,4 +1,4 @@
-package study.querydsl.repository;
+package study.querydsl.repository.custom;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -16,10 +16,10 @@ import static study.querydsl.entity.QTeam.team;
 
 /**
  * <<설계>>
- * <p>
- * 되게 특정 기능에 맞춰진 조회 기능인 경우 (특정 api, 화면에 특화된 기능)
- * - 구현체로 만들어서 injection해서 쓰기!
- * -> 핵심 기능은 "MemberRepository"에 넣고 특정 기능에 특화된 기능은 Repository에 따로 만들기!
+ * Custom 기능에 다 몰아넣지 말고
+ * - 핵심 biz 기능과 아닌 것 분리
+ * - life cycle에 따라 뭘 변경
+ * 고려해서 repository 쪼개기
  */
 @Repository
 @RequiredArgsConstructor

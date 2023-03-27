@@ -1,4 +1,4 @@
-package study.querydsl.repository;
+package study.querydsl.repository.custom;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
