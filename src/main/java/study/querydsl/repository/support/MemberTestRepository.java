@@ -1,4 +1,4 @@
-package study.querydsl.repository;
+package study.querydsl.repository.support;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -8,7 +8,6 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.MemberSearchCondition;
-import study.querydsl.repository.support.Querydsl4RepositorySupport;
 
 import java.util.List;
 
@@ -44,12 +43,12 @@ public class MemberTestRepository extends Querydsl4RepositorySupport {
 
         List<Member> content = getQuerydsl().applyPagination(pageable, query)
                 .fetch();
-        return PageableExecutionUtils.getPage(content, pageable, query::fetchCount);
+        return PageableExecutionUtils.getPage(content, pageable, query::fetchCount); //query.fetchCount(); CountQuery
     }
 
     /**
-     * 위와 같은 코드! (simple paging)
-     * - 직접 만든 applyPagination + 람다 이용해서 더 깔끔한 코드 작성
+     * 위와 같은 코드! (searchPageSimple)
+     * - 직접 만든 applyPagination(Querydsl4RepositorySupport) + 람다 이용해서 더 깔끔한 코드 작성
      */
     public Page<Member> applyPagination(MemberSearchCondition condition, Pageable pageable) {
         return applyPagination(pageable, query -> query
@@ -63,7 +62,7 @@ public class MemberTestRepository extends Querydsl4RepositorySupport {
     }
 
     /**
-     * 복잡한 페이징
+     * 복잡한 페이징(searchPageComplex)
      * 데이터 조회 쿼리와, 전체 카운트 쿼리를 분리
      */
     public Page<Member> applyPagination2(MemberSearchCondition condition, Pageable pageable) {

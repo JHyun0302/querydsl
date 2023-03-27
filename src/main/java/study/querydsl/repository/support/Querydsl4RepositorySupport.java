@@ -23,6 +23,7 @@ import java.util.function.Function;
 
 
 /**
+ * Querydsl4RepositorySupport 한계 극복을 위해 직접 Querydsl 지원 클래스 만들기!
  * Querydsl 4.x 버전에 맞춘 Querydsl 지원 라이브러리
  *
  * @author Younghan Kim
