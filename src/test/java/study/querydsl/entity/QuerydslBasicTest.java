@@ -73,6 +73,7 @@ public class QuerydslBasicTest {
 
     @Test
     public void startQuerydsl() {
+        // 셀프 조인 시 new QMember() 쓰기. 보통의 경우에는 QMember static import 하면 됨.
         QMember m = new QMember("m");
 
         Member findMember = queryFactory
@@ -140,7 +141,7 @@ public class QuerydslBasicTest {
 //        Member findMember2 = queryFactory
 //                .selectFrom(member)
 //                .fetchFirst();
-//        //페이징에서 사용
+//        //페이징에서 사용, 쿼리 2번 실행. 1. count(), 2. member 데이터
 //        QueryResults<Member> results = queryFactory
 //                .selectFrom(member)
 //                .fetchResults();
@@ -158,8 +159,9 @@ public class QuerydslBasicTest {
     /**
      * 회원 정렬 순서
      * 1. 회원 나이 내림차순(desc)
-     * 2. 호원 이름 올림차순(asc)
-     * 단 2에서 회원 이름이 없으면 마지막에 출력(nulls last)
+     * 2. 회원 이름 올림차순(asc)
+     * 단 2에서 회원 이름이 없으면 마지막에 출력(nullsLast)
+     * 'nullsFirst'도 있음.
      */
     @Test
     public void sort() {
@@ -181,7 +183,7 @@ public class QuerydslBasicTest {
         assertThat(memberNull.getUsername()).isNull();
     }
 
-    //조회 건수 제한
+    //조회 건수 제한 (Count 쿼리 X)
     @Test
     public void paging1() {
         List<Member> result = queryFactory
@@ -195,6 +197,7 @@ public class QuerydslBasicTest {
     }
 
     //전체 조회 수 + count 쿼리
+    //단, count 쿼리가 단순한 경우에는 두개 따로 작성하기! (count 쿼리에서 조인 필요 없을때.)
     @Test
     public void paging2() {
         QueryResults<Member> queryResults = queryFactory
@@ -337,8 +340,8 @@ public class QuerydslBasicTest {
                 .from(member)
 //                .join(member.team, team)
                 .leftJoin(member.team, team)
-                .on(team.name.eq("teamA"))  //where 절과 결과 동일
-//                .where(team.name.eq("teamA"))
+                .on(team.name.eq("teamA"))  //where 절과 결과 동일 (외부 조인 쓰는 경우 on절)
+//                .where(team.name.eq("teamA")) //inner join인 경우 where절 사용
                 .fetch();
 
         for (Tuple tuple : result) {
@@ -360,9 +363,10 @@ public class QuerydslBasicTest {
         List<Tuple> result = queryFactory
                 .select(member, team)
                 .from(member)
-                .leftJoin(member.team, team)
-//                .join(team)
-                .on(member.username.eq(team.name)) // 세타(id값 따로 없이 막 조인!) 조인 조건: "userName == teamName"
+//                .leftJoin(member.team, team) //일반 조인 조건 (team으로 조인)
+                .leftJoin(team) //on 조인 (세타 조인)
+//                .join(team) //내부 조인
+                .on(member.username.eq(team.name)) // 세타 조인 조건: "userName == teamName"
                 .fetch();
 
         for (Tuple tuple : result) {
@@ -416,7 +420,7 @@ public class QuerydslBasicTest {
      */
     @Test
     public void subQuery() {
-        QMember memberSub = new QMember("memberSub");
+        QMember memberSub = new QMember("memberSub"); //자기 자신이 서브 쿼리 들어 가야함.
 
         List<Member> result = queryFactory
                 .selectFrom(member)
@@ -555,7 +559,7 @@ public class QuerydslBasicTest {
     /**
      * 상수, 문자 더하기
      * - Expressions.constant("X")
-     * - .concat("X")
+     * - .concat("_")
      * - string 타입이 아닌경우: .stringValue()
      */
     @Test
@@ -827,8 +831,8 @@ public class QuerydslBasicTest {
     public void bulkAdd() {
         long count = queryFactory
                 .update(member)
-//                .set(member.age, member.age.add(1))
-                .set(member.age, member.age.multiply(2))
+                .set(member.age, member.age.add(1))
+//                .set(member.age, member.age.multiply(2))
                 .execute();
     }
 
