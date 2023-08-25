@@ -2,7 +2,7 @@ spring:
   profiles:
     active: local
   datasource:
-    url: jdbc:h2:tcp://localhost/~/querydsl
+    url: jdbc:h2:tcp://localhost/~/h2_DB/querydsl
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -14,7 +14,7 @@ spring:
       hibernate:
         #        show_sql: true
         format_sql: true
-        use_sql_comments: true     #실행되는 JPQL 보기
+        use_sql_comments: true     #Querydsl -> JPQL 보기
 
 logging.level:
   org.hibernate.SQL: debug
