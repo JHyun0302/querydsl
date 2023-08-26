@@ -68,9 +68,9 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { //extends 
                         ageGoe(condition.getAgeGoe()),
                         ageLoe(condition.getAgeLoe())
                 )
-                .offset(pageable.getOffset()) //몇 번부터 시작할거야
-                .limit(pageable.getPageSize()) //1번 조회할 때 몇 개까지 가져올거야
-                .fetchResults(); // 쿼리 2번 나감(count, original)
+                .offset(pageable.getOffset()) //몇 번부터 시작할거야?
+                .limit(pageable.getPageSize()) //1번 조회할 때 몇 개까지 가져올거야?
+                .fetchResults(); // 쿼리 2번 나감(count 쿼리 + result 쿼리)
 
         List<MemberTeamDto> content = results.getResults(); //실제 데이터
         long total = results.getTotal();
@@ -111,8 +111,11 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { //extends 
     /**
      * 복잡한 페이징
      * 데이터 조회 쿼리와, 전체 카운트 쿼리를 분리
-     * - count 쿼리 리팩토링(생략)
-     * 1. 페이지 시작시 컨텐츠 size < page size인 경우
+     * - count 쿼리가 생략 가능한 경우 생략해서 처리
+     * 1. 페이지 시작시 (content size) < (page size)인 경우
+     * - ex) 전체데이터 = 100, size = 200 -> 2번째 페이지가 없음!
+     * -> CountQuery 안 나감!
+     * <p>
      * 2. 마지막 페이지 일 때 (offset + content size = 전체 사이즈)
      */
     @Override
