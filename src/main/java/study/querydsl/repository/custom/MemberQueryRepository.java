@@ -16,10 +16,11 @@ import static study.querydsl.entity.QTeam.team;
 
 /**
  * <<설계>>
- * Custom 기능에 다 몰아넣지 말고
+ * MemberRepositoryCustom 안에 모든 기능에 다 몰아넣지 말고
  * - 핵심 biz 기능과 아닌 것 분리
- * - life cycle에 따라 뭘 변경
- * 고려해서 repository 쪼개기
+ * - 간단한 CRUD : MemberRepository (스프링 데이터 JPA)
+ * - 다양한 곳에서 사용 : MemberRepositoryCustom + MemberRepositoryImpl
+ * - 한 화면에 특화된 기능 : MemberQueryRepository
  */
 @Repository
 @RequiredArgsConstructor
