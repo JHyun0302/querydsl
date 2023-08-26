@@ -23,6 +23,15 @@ import java.util.function.Function;
 
 
 /**
+ * Querydsl4RepositorySupport 장점
+ * 1.getQuerydsl().applyPagination() 스프링 데이터가 제공하는 페이징을 Querydsl로 편리하게 변환 가능(단, Sort는 오류발생)
+ * 2. EntityManager 제공
+ * <p>
+ * 한계
+ * 1. Querydsl 4.x에 나온 JPAQueryFactory 시작 불가능. (from 부터 시작)
+ * 2. 'QueryFactory' 제공 X
+ * 3. 스프링 데이터 Sort 기능 정상 작동 X
+ * <p>
  * Querydsl4RepositorySupport 한계 극복을 위해 직접 Querydsl 지원 클래스 만들기!
  * Querydsl 4.x 버전에 맞춘 Querydsl 지원 라이브러리
  *
