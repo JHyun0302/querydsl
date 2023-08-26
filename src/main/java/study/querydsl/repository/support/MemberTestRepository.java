@@ -63,7 +63,7 @@ public class MemberTestRepository extends Querydsl4RepositorySupport {
 
     /**
      * 복잡한 페이징(searchPageComplex)
-     * 데이터 조회 쿼리와, 전체 카운트 쿼리를 분리
+     * result 쿼리 & count 쿼리 분리
      */
     public Page<Member> applyPagination2(MemberSearchCondition condition, Pageable pageable) {
         return applyPagination(pageable, contentQuery -> contentQuery
