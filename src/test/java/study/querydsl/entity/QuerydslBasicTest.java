@@ -636,9 +636,9 @@ public class QuerydslBasicTest {
 
     /**
      * Querydsl 빈 생성(Bean population)
-     * 1. 프로퍼티 접근 - Setter (@Getter, @Setter)
-     * 2. 필드 직접 접근
-     * 3. 생성자 사용 - 기본 생성자 필요
+     * 1. 프로퍼티 접근 - Setter (@Getter, @Setter)       Projections.bean(MemberDto.class)
+     * 2. 필드 직접 접근                                  Projections.fields(MemberDto.class)
+     * 3. 생성자 사용 (@QueryProjection) - 기본 생성자 필요   Projections.constructor(MemberDto.class)
      */
     @Test
     public void findDtoBySetter() {
@@ -669,7 +669,7 @@ public class QuerydslBasicTest {
     }
 
     /**
-     * 별칭이 다를 때
+     * 필드 접근: 별칭이 다를 때
      * - 필드에 별칭 적용: .as("별칭")
      * - 필드나 서브쿼리에 별칭 적용: ExpressionUtils.as(~~, "별칭")
      */
@@ -681,7 +681,7 @@ public class QuerydslBasicTest {
                 .select(Projections.fields(UserDto.class),
                         member.username.as("name"),
 
-                        ExpressionUtils.as(JPAExpressions
+                        ExpressionUtils.as(JPAExpressions   //서브 쿼리
                                 .select(memberSub.age.max())
                                 .from(memberSub), "age")
                 )
@@ -692,7 +692,8 @@ public class QuerydslBasicTest {
         }
     }
 
-    //@QueryProjection 차이점: Constructor = 런타임 에러임!
+    //@QueryProjection -> DTO를 Q파일로 생성: 컴파일 시점에서 에러 잡을 수 있음.
+    // Constructor -> 런타임 에러임!
     @Test
     public void findDtoByConstructor() {
         List<Tuple> result = queryFactory
@@ -737,6 +738,7 @@ public class QuerydslBasicTest {
     }
 
     private List<Member> searchMember1(String usernameCond, Integer ageCond) {
+//        BooleanBuilder builder = new BooleanBuilder(member.username.eq(usernameCond)); //BooleanBuilder 생성시 초기값 넣을 수 있음.
         BooleanBuilder builder = new BooleanBuilder();
 
         if (usernameCond != null) {
@@ -785,7 +787,7 @@ public class QuerydslBasicTest {
 
     //조합 가능
     private BooleanExpression allEq(String usernameCond, Integer ageCond) {
-        return usernameEq(usernameCond).and(ageEq(ageCond));
+        return usernameEq(usernameCond).and(ageEq(ageCond)); //null 처리 따로 해야함!
     }
 
     /**
@@ -807,8 +809,8 @@ public class QuerydslBasicTest {
                 .set(member.username, "비회원")
                 .where(member.age.lt(28))
                 .execute();
-        em.flush();
-        em.clear();
+        em.flush(); //벌크 연산시 필수 (영속성 컨택스트 비우기)
+        em.clear(); //벌크 연산시 필수 (영속성 컨택스트 초기화)
         //후
         //1 member1 = 10 -> 1 DB 비회원
         //2 member2 = 20 -> 2 DB 비회원
@@ -832,6 +834,7 @@ public class QuerydslBasicTest {
         long count = queryFactory
                 .update(member)
                 .set(member.age, member.age.add(1))
+//                .set(member.age, member.age.add(-1))  //.minus() 없음
 //                .set(member.age, member.age.multiply(2))
                 .execute();
     }
@@ -849,8 +852,8 @@ public class QuerydslBasicTest {
 
     /**
      * SQL function 호출
-     * - JPA처럼 Dialect에 등록된 내용만 호출 가능
-     * - member -> M
+     * - JPA처럼 H2 Dialect에 등록된 function 호출 가능
+     * - member -> M 변경
      */
     @Test
     public void sqlFunction() {
@@ -865,7 +868,10 @@ public class QuerydslBasicTest {
         }
     }
 
-    //  소문자 변경
+    /**
+     * 소문자 변경
+     * - lower()같은 ANSI 표준 함수들은 querydsl에 내장되어 제공
+     */
     @Test
     public void sqlFunction2() {
         List<String> result = queryFactory
