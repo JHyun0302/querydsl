@@ -2,7 +2,7 @@
 
 <img src="https://github.com/JHyun0302/server/assets/60764632/36f6c913-d51f-4044-bbaa-7ae27cd4cf57"  width="600" height="300"/>
 
-코드수업명 : [실전! Querydsl](https://www.inflearn.com/course/querydsl-%EC%8B%A4%EC%A0%84)
+### 수업명 : [실전! Querydsl](https://www.inflearn.com/course/querydsl-%EC%8B%A4%EC%A0%84)
 
 - 지식공유자 : 김영한
 
